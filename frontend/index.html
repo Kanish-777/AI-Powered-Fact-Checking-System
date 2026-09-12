@@ -1,0 +1,2283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>AI-Powered Fact Checking System</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #f4f6fb;
+            color: #111827;
+
+            min-height: 100vh;
+        }
+
+        header {
+            background: #ffffff;
+
+            border-bottom:
+                1px solid #e5e7eb;
+
+            padding:
+                17px 28px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            position: sticky;
+            top: 0;
+
+            z-index: 50;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-link {
+            font-size: 13px;
+            color: #4b5563;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .nav-link:hover {
+            color: #4f46e5;
+        }
+
+        .status {
+            font-size: 13px;
+            color: #15803d;
+            white-space: nowrap;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: auto;
+
+            padding:
+                45px 20px
+                60px;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .hero h1 {
+            font-size: 38px;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            color: #6b7280;
+            line-height: 1.6;
+            max-width: 760px;
+            margin: auto;
+        }
+
+        .card {
+            background: #ffffff;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 16px;
+
+            padding: 24px;
+
+            box-shadow:
+                0 8px 24px
+                rgba(0, 0, 0, 0.05);
+        }
+
+        .claim-card {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+
+            min-height: 115px;
+
+            resize: vertical;
+
+            padding: 15px;
+
+            font-size: 15px;
+
+            border:
+                1px solid #d1d5db;
+
+            border-radius: 10px;
+
+            outline: none;
+
+            background: #ffffff;
+
+            color: #111827;
+        }
+
+        textarea:focus {
+            border-color: #4f46e5;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(79, 70, 229, 0.08);
+        }
+
+        .input-footer {
+            margin-top: 13px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 15px;
+        }
+
+        .character-count {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+
+            border-radius: 9px;
+
+            padding:
+                12px 22px;
+
+            font-size: 13px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition:
+                transform 0.15s ease,
+                opacity 0.15s ease,
+                background 0.15s ease;
+        }
+
+        button:hover {
+            transform:
+                translateY(-1px);
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .primary-button {
+            background: #4f46e5;
+            color: #ffffff;
+        }
+
+        .primary-button:hover {
+            background: #4338ca;
+        }
+
+        .secondary-button {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+
+        .secondary-button:hover {
+            background: #e0e7ff;
+        }
+
+        .danger-button {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .danger-button:hover {
+            background: #fecaca;
+        }
+
+        .neutral-button {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .loading-card {
+            display: none;
+            margin-top: 22px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+
+            margin:
+                0 auto 15px;
+
+            border:
+                4px solid #e5e7eb;
+
+            border-top:
+                4px solid #4f46e5;
+
+            border-radius: 50%;
+
+            animation:
+                spin 0.8s
+                linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform:
+                    rotate(360deg);
+            }
+        }
+
+        .loading-title {
+            font-weight: 700;
+        }
+
+        .loading-message {
+            margin-top: 7px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .timer {
+            margin-top: 10px;
+            color: #4f46e5;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .error-box {
+            display: none;
+
+            margin-top: 20px;
+
+            padding: 14px 16px;
+
+            background: #fee2e2;
+
+            border:
+                1px solid #fecaca;
+
+            border-radius: 10px;
+
+            color: #991b1b;
+
+            font-size: 14px;
+        }
+
+        #resultSection {
+            display: none;
+            margin-top: 22px;
+        }
+
+        .result-top {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 20px;
+
+            margin-bottom: 20px;
+        }
+
+        .verdict-badge {
+            display: inline-flex;
+            align-items: center;
+
+            padding:
+                8px 14px;
+
+            border-radius: 999px;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            letter-spacing: 0.2px;
+        }
+
+        .supported {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .refuted {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .insufficient {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .confidence {
+            color: #4b5563;
+            font-size: 14px;
+        }
+
+        .section-title {
+            margin-top: 23px;
+            margin-bottom: 8px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.5px;
+
+            text-transform: uppercase;
+
+            color: #6b7280;
+        }
+
+        .evaluated-claim {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .explanation-box {
+            padding: 15px;
+
+            border-radius: 10px;
+
+            background: #f9fafb;
+
+            line-height: 1.65;
+
+            font-size: 15px;
+        }
+
+        .metric-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 12px;
+
+            margin-top: 10px;
+        }
+
+        .metric-card {
+            background: #f9fafb;
+
+            border:
+                1px solid #f3f4f6;
+
+            border-radius: 10px;
+
+            text-align: center;
+
+            padding: 16px;
+        }
+
+        .metric-value {
+            font-size: 21px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: #4b5563;
+        }
+
+        .query-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .query-chip {
+            padding:
+                7px 10px;
+
+            border-radius: 999px;
+
+            background: #eef2ff;
+
+            color: #3730a3;
+
+            font-size: 12px;
+        }
+
+        .evidence-card {
+            margin-top: 10px;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            background: #ffffff;
+        }
+
+        .evidence-header {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 15px;
+
+            padding: 14px;
+
+            cursor: pointer;
+
+            background: #fafafa;
+        }
+
+        .evidence-header:hover {
+            background: #f6f7f9;
+        }
+
+        .evidence-title {
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .evidence-meta {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .view-label {
+            color: #4f46e5;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .evidence-body {
+            display: none;
+
+            padding: 15px;
+
+            border-top:
+                1px solid #e5e7eb;
+
+            line-height: 1.65;
+
+            font-size: 14px;
+
+            color: #374151;
+        }
+
+        .evidence-body.open {
+            display: block;
+        }
+
+        .source-link {
+            display: inline-block;
+
+            margin-top: 12px;
+
+            color: #4f46e5;
+
+            font-weight: 700;
+
+            text-decoration: none;
+        }
+
+        .history-card {
+            display: none;
+            margin-top: 22px;
+        }
+
+        .history-header {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 20px;
+
+            margin-bottom: 18px;
+        }
+
+        .history-heading h2 {
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .history-heading p {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .history-item {
+            padding: 14px;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            margin-bottom: 10px;
+
+            background: #ffffff;
+        }
+
+        .history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .history-top {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-bottom: 7px;
+        }
+
+        .history-claim {
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .history-verdict {
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .history-meta {
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 28px;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .how-it-works {
+            margin-top: 22px;
+        }
+
+        .how-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .how-header h2 {
+            font-size: 23px;
+            margin-bottom: 6px;
+        }
+
+        .how-header p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .steps-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 12px;
+        }
+
+        .step-card {
+            padding: 17px;
+
+            background: #f9fafb;
+
+            border:
+                1px solid #e5e7eb;
+
+            border-radius: 11px;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #eef2ff;
+
+            color: #3730a3;
+
+            font-weight: 700;
+
+            margin-bottom: 12px;
+        }
+
+        .step-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .step-description {
+            color: #6b7280;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 35px;
+            color: #9ca3af;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .footer-name {
+            color: #6b7280;
+        }
+
+        .footer-links {
+            margin-top: 6px;
+        }
+
+        .footer-links a {
+            color: #4f46e5;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-links span {
+            margin: 0 6px;
+        }
+
+        .footer-tech {
+            margin-top: 10px;
+        }
+
+        @media
+        (max-width: 800px) {
+
+            .hero h1 {
+                font-size: 30px;
+            }
+
+            .steps-grid {
+                grid-template-columns:
+                    repeat(2, 1fr);
+            }
+
+        }
+
+        @media
+        (max-width: 650px) {
+
+            header {
+                padding:
+                    15px 18px;
+            }
+
+            .header-right .nav-link {
+                display: none;
+            }
+
+            .container {
+                padding:
+                    35px 14px
+                    45px;
+            }
+
+            .hero h1 {
+                font-size: 27px;
+            }
+
+            .input-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .character-count {
+                text-align: right;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .result-top {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .history-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .history-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .history-top {
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div class="brand">
+        AI Fact Checker
+    </div>
+
+    <div class="header-right">
+
+        <span
+            class="nav-link"
+            onclick="scrollToChecker()"
+        >
+            Check Claim
+        </span>
+
+        <span
+            class="nav-link"
+            onclick="loadHistory()"
+        >
+            History
+        </span>
+
+        <span
+            class="nav-link"
+            onclick="scrollToHowItWorks()"
+        >
+            How It Works
+        </span>
+
+        <div class="status">
+            ● System Online
+        </div>
+
+    </div>
+
+</header>
+
+
+<main class="container">
+
+    <section class="hero">
+
+        <h1>
+            AI-Powered Fact Checking System
+        </h1>
+
+        <p>
+            Enter a factual claim. The system retrieves evidence,
+            ranks relevant information and uses Natural Language
+            Inference to determine whether the claim is supported,
+            refuted or lacks sufficient evidence.
+        </p>
+
+    </section>
+
+
+    <section
+        class="card claim-card"
+        id="checkerSection"
+    >
+
+        <label for="claimInput">
+            Enter a factual claim
+        </label>
+
+        <textarea
+            id="claimInput"
+            maxlength="500"
+            placeholder="Example: The Sun is a planet"
+            oninput="updateCharacterCount()"
+        ></textarea>
+
+
+        <div class="input-footer">
+
+            <div
+                class="character-count"
+                id="characterCount"
+            >
+                0 / 500
+            </div>
+
+
+            <div class="button-row">
+
+                <button
+                    class="secondary-button"
+                    onclick="loadHistory()"
+                >
+                    View History
+                </button>
+
+                <button
+                    class="primary-button"
+                    id="checkButton"
+                    onclick="checkClaim()"
+                >
+                    Check Claim
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <section
+        id="loadingCard"
+        class="card loading-card"
+    >
+
+        <div class="spinner"></div>
+
+        <div class="loading-title">
+            Verifying claim...
+        </div>
+
+        <div
+            class="loading-message"
+            id="loadingMessage"
+        >
+            Preparing fact-checking pipeline...
+        </div>
+
+        <div
+            class="timer"
+            id="timer"
+        >
+            0 seconds
+        </div>
+
+    </section>
+
+
+    <div
+        id="errorBox"
+        class="error-box"
+    ></div>
+
+
+    <section
+        id="resultSection"
+    >
+
+        <div class="card">
+
+            <div class="result-top">
+
+                <div
+                    id="verdictBadge"
+                    class="verdict-badge"
+                ></div>
+
+                <div
+                    id="confidenceText"
+                    class="confidence"
+                ></div>
+
+            </div>
+
+
+            <div class="section-title">
+                Evaluated Claim
+            </div>
+
+            <div
+                id="claimDisplay"
+                class="evaluated-claim"
+            ></div>
+
+
+            <div class="section-title">
+                Explanation
+            </div>
+
+            <div
+                id="explanation"
+                class="explanation-box"
+            ></div>
+
+
+            <div class="section-title">
+                Decision Scores
+            </div>
+
+            <div class="metric-grid">
+
+                <div class="metric-card">
+
+                    <div
+                        class="metric-value"
+                        id="supportScore"
+                    >
+                        0%
+                    </div>
+
+                    <div class="metric-label">
+                        Support
+                    </div>
+
+                </div>
+
+
+                <div class="metric-card">
+
+                    <div
+                        class="metric-value"
+                        id="refuteScore"
+                    >
+                        0%
+                    </div>
+
+                    <div class="metric-label">
+                        Refute
+                    </div>
+
+                </div>
+
+
+                <div class="metric-card">
+
+                    <div
+                        class="metric-value"
+                        id="insufficientScore"
+                    >
+                        0%
+                    </div>
+
+                    <div class="metric-label">
+                        Insufficient
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="section-title">
+                Generated Search Queries
+            </div>
+
+            <div
+                id="queryList"
+                class="query-container"
+            ></div>
+
+
+            <div class="section-title">
+                Retrieved Evidence
+            </div>
+
+            <div id="evidenceList"></div>
+
+        </div>
+
+    </section>
+
+
+    <section
+        id="historySection"
+        class="card history-card"
+    >
+
+        <div class="history-header">
+
+            <div class="history-heading">
+
+                <h2>
+                    Claim History
+                </h2>
+
+                <p>
+                    Previously verified claims stored in the local database
+                </p>
+
+            </div>
+
+
+            <div class="history-actions">
+
+                <button
+                    class="neutral-button"
+                    onclick="hideHistory()"
+                >
+                    Hide History
+                </button>
+
+                <button
+                    class="danger-button"
+                    onclick="clearHistory()"
+                >
+                    Clear History
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div id="historyList"></div>
+
+    </section>
+
+
+    <section
+        class="card how-it-works"
+        id="howItWorks"
+    >
+
+        <div class="how-header">
+
+            <h2>
+                How the System Works
+            </h2>
+
+            <p>
+                Evidence-based verification using retrieval,
+                semantic ranking and Natural Language Inference.
+            </p>
+
+        </div>
+
+
+        <div class="steps-grid">
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    1
+                </div>
+
+                <div class="step-title">
+                    Query Generation
+                </div>
+
+                <div class="step-description">
+                    The claim is analysed and transformed into
+                    multiple evidence-search queries.
+                </div>
+
+            </div>
+
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    2
+                </div>
+
+                <div class="step-title">
+                    Evidence Retrieval
+                </div>
+
+                <div class="step-description">
+                    Relevant information is retrieved from
+                    available knowledge and scientific sources.
+                </div>
+
+            </div>
+
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    3
+                </div>
+
+                <div class="step-title">
+                    Semantic Ranking
+                </div>
+
+                <div class="step-description">
+                    BGE retrieval and Cross-Encoder reranking
+                    identify the evidence most relevant to the claim.
+                </div>
+
+            </div>
+
+
+            <div class="step-card">
+
+                <div class="step-number">
+                    4
+                </div>
+
+                <div class="step-title">
+                    Claim Verification
+                </div>
+
+                <div class="step-description">
+                    DeBERTa-based Natural Language Inference and
+                    aggregation determine the final verdict.
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <footer>
+
+        <div class="footer-name">
+            Developed by
+            <strong>Kanishk Sharma</strong>
+        </div>
+
+        <div class="footer-links">
+
+            <a
+                href="https://github.com/Kanish-777"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                GitHub
+            </a>
+
+            <span>·</span>
+
+        
+            <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=kanishsharma305@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Email
+            </a>
+
+        </div>
+
+        <div class="footer-tech">
+            BGE Semantic Retrieval
+            · Cross-Encoder Reranking
+            · DeBERTa NLI
+        </div>
+
+    </footer>
+
+</main>
+
+
+<script>
+
+    let timerInterval = null;
+
+
+    function updateCharacterCount() {
+
+        const input =
+            document.getElementById(
+                "claimInput"
+            );
+
+        const counter =
+            document.getElementById(
+                "characterCount"
+            );
+
+        counter.textContent =
+            input.value.length
+            + " / 500";
+
+    }
+
+
+    function toPercentage(
+        value
+    ) {
+
+        return (
+            (
+                Number(
+                    value || 0
+                )
+                * 100
+            ).toFixed(1)
+            + "%"
+        );
+
+    }
+
+
+    function scrollToChecker() {
+
+        document.getElementById(
+            "checkerSection"
+        ).scrollIntoView({
+            behavior: "smooth"
+        });
+
+    }
+
+
+    function scrollToHowItWorks() {
+
+        document.getElementById(
+            "howItWorks"
+        ).scrollIntoView({
+            behavior: "smooth"
+        });
+
+    }
+
+
+    function startTimer() {
+
+        let seconds = 0;
+
+        const timer =
+            document.getElementById(
+                "timer"
+            );
+
+        const message =
+            document.getElementById(
+                "loadingMessage"
+            );
+
+        timer.textContent =
+            "0 seconds";
+
+        message.textContent =
+            "Preparing fact-checking pipeline...";
+
+
+        timerInterval =
+            setInterval(
+                function () {
+
+                    seconds++;
+
+                    timer.textContent =
+                        seconds
+                        + (
+                            seconds === 1
+                            ? " second"
+                            : " seconds"
+                        );
+
+
+                    if (seconds < 5) {
+
+                        message.textContent =
+                            "Generating evidence search queries...";
+
+                    }
+
+                    else if (seconds < 12) {
+
+                        message.textContent =
+                            "Retrieving candidate evidence...";
+
+                    }
+
+                    else if (seconds < 20) {
+
+                        message.textContent =
+                            "Ranking relevant evidence...";
+
+                    }
+
+                    else {
+
+                        message.textContent =
+                            "Verifying evidence and calculating verdict...";
+
+                    }
+
+                },
+                1000
+            );
+
+    }
+
+
+    function stopTimer() {
+
+        if (timerInterval) {
+
+            clearInterval(
+                timerInterval
+            );
+
+            timerInterval = null;
+
+        }
+
+    }
+
+
+    async function checkClaim() {
+
+        const input =
+            document.getElementById(
+                "claimInput"
+            );
+
+        const button =
+            document.getElementById(
+                "checkButton"
+            );
+
+        const loading =
+            document.getElementById(
+                "loadingCard"
+            );
+
+        const result =
+            document.getElementById(
+                "resultSection"
+            );
+
+        const errorBox =
+            document.getElementById(
+                "errorBox"
+            );
+
+
+        const claim =
+            input.value.trim();
+
+
+        if (claim.length < 3) {
+
+            errorBox.style.display =
+                "block";
+
+            errorBox.textContent =
+                "Please enter a valid factual claim.";
+
+            return;
+
+        }
+
+
+        errorBox.style.display =
+            "none";
+
+        result.style.display =
+            "none";
+
+        loading.style.display =
+            "block";
+
+        button.disabled =
+            true;
+
+        button.textContent =
+            "Checking...";
+
+
+        startTimer();
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/check-claim",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+                                claim: claim
+                            })
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                let message =
+                    "Unable to verify the claim.";
+
+                try {
+
+                    const errorData =
+                        await response.json();
+
+                    if (
+                        errorData.detail
+                    ) {
+
+                        message =
+                            typeof errorData.detail
+                            === "string"
+                            ? errorData.detail
+                            : message;
+
+                    }
+
+                }
+
+                catch (_) {
+                }
+
+                throw new Error(
+                    message
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            showResult(
+                data
+            );
+
+        }
+
+        catch (error) {
+
+            errorBox.style.display =
+                "block";
+
+            errorBox.textContent =
+                "Unable to check claim. "
+                + error.message;
+
+        }
+
+        finally {
+
+            stopTimer();
+
+            loading.style.display =
+                "none";
+
+            button.disabled =
+                false;
+
+            button.textContent =
+                "Check Claim";
+
+        }
+
+    }
+
+
+    function showResult(
+        data
+    ) {
+
+        const verdict =
+            data.final_verdict
+            || "INSUFFICIENT";
+
+
+        const badge =
+            document.getElementById(
+                "verdictBadge"
+            );
+
+
+        badge.textContent =
+            verdict;
+
+
+        badge.className =
+            "verdict-badge";
+
+
+        if (
+            verdict === "SUPPORTED"
+        ) {
+
+            badge.classList.add(
+                "supported"
+            );
+
+        }
+
+        else if (
+            verdict === "REFUTED"
+        ) {
+
+            badge.classList.add(
+                "refuted"
+            );
+
+        }
+
+        else {
+
+            badge.classList.add(
+                "insufficient"
+            );
+
+        }
+
+
+        document.getElementById(
+            "confidenceText"
+        ).textContent =
+            "Model Confidence Score: "
+            + toPercentage(
+                data.confidence
+            );
+
+
+        document.getElementById(
+            "claimDisplay"
+        ).textContent =
+            data.received_claim
+            || "";
+
+
+        document.getElementById(
+            "explanation"
+        ).textContent =
+            data.explanation
+            || "No explanation available.";
+
+
+        document.getElementById(
+            "supportScore"
+        ).textContent =
+            toPercentage(
+                data.support_score
+            );
+
+
+        document.getElementById(
+            "refuteScore"
+        ).textContent =
+            toPercentage(
+                data.refute_score
+            );
+
+
+        document.getElementById(
+            "insufficientScore"
+        ).textContent =
+            toPercentage(
+                data.insufficient_score
+            );
+
+
+        renderQueries(
+            data.search_queries || []
+        );
+
+
+        renderEvidence(
+            data.evidence || []
+        );
+
+
+        const resultSection =
+            document.getElementById(
+                "resultSection"
+            );
+
+
+        resultSection.style.display =
+            "block";
+
+
+        resultSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    }
+
+
+    function renderQueries(
+        queries
+    ) {
+
+        const container =
+            document.getElementById(
+                "queryList"
+            );
+
+
+        container.innerHTML =
+            "";
+
+
+        if (
+            queries.length === 0
+        ) {
+
+            container.textContent =
+                "No generated queries.";
+
+            return;
+
+        }
+
+
+        queries.forEach(
+            function (query) {
+
+                const chip =
+                    document.createElement(
+                        "div"
+                    );
+
+                chip.className =
+                    "query-chip";
+
+                chip.textContent =
+                    query;
+
+                container.appendChild(
+                    chip
+                );
+
+            }
+        );
+
+    }
+
+
+    function renderEvidence(
+        evidence
+    ) {
+
+        const container =
+            document.getElementById(
+                "evidenceList"
+            );
+
+
+        container.innerHTML =
+            "";
+
+
+        if (
+            evidence.length === 0
+        ) {
+
+            container.innerHTML =
+                `
+                <div class="empty-history">
+                    No usable evidence was returned.
+                </div>
+                `;
+
+            return;
+
+        }
+
+
+        evidence.forEach(
+            function (item) {
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.className =
+                    "evidence-card";
+
+
+                const header =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                header.className =
+                    "evidence-header";
+
+
+                const left =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const title =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                title.className =
+                    "evidence-title";
+
+
+                title.textContent =
+                    item.title
+                    || "Evidence";
+
+
+                const meta =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                meta.className =
+                    "evidence-meta";
+
+
+                meta.textContent =
+                    (
+                        item.source
+                        || "Source"
+                    )
+                    +
+                    " · "
+                    +
+                    (
+                        item.verdict
+                        || "UNCLASSIFIED"
+                    );
+
+
+                left.appendChild(
+                    title
+                );
+
+
+                left.appendChild(
+                    meta
+                );
+
+
+                const toggle =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                toggle.className =
+                    "view-label";
+
+
+                toggle.textContent =
+                    "View";
+
+
+                header.appendChild(
+                    left
+                );
+
+
+                header.appendChild(
+                    toggle
+                );
+
+
+                const body =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                body.className =
+                    "evidence-body";
+
+
+                const text =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                text.textContent =
+                    item.text || "";
+
+
+                body.appendChild(
+                    text
+                );
+
+
+                if (
+                    item.url
+                ) {
+
+                    const link =
+                        document.createElement(
+                            "a"
+                        );
+
+
+                    link.href =
+                        item.url;
+
+
+                    link.target =
+                        "_blank";
+
+
+                    link.rel =
+                        "noopener noreferrer";
+
+
+                    link.className =
+                        "source-link";
+
+
+                    link.textContent =
+                        "Open source ↗";
+
+
+                    body.appendChild(
+                        link
+                    );
+
+                }
+
+
+                header.addEventListener(
+                    "click",
+                    function () {
+
+                        const open =
+                            body.classList.toggle(
+                                "open"
+                            );
+
+
+                        toggle.textContent =
+                            open
+                            ? "Hide"
+                            : "View";
+
+                    }
+                );
+
+
+                card.appendChild(
+                    header
+                );
+
+
+                card.appendChild(
+                    body
+                );
+
+
+                container.appendChild(
+                    card
+                );
+
+            }
+        );
+
+    }
+
+
+    async function loadHistory() {
+
+        const section =
+            document.getElementById(
+                "historySection"
+            );
+
+
+        const container =
+            document.getElementById(
+                "historyList"
+            );
+
+
+        section.style.display =
+            "block";
+
+
+        container.innerHTML =
+            `
+            <div class="empty-history">
+                Loading history...
+            </div>
+            `;
+
+
+        section.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/history"
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Unable to load history."
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            renderHistory(
+                data.history || []
+            );
+
+        }
+
+        catch (error) {
+
+            container.innerHTML =
+                `
+                <div class="empty-history">
+                    Unable to load claim history.
+                </div>
+                `;
+
+        }
+
+    }
+
+
+    function hideHistory() {
+
+        document.getElementById(
+            "historySection"
+        ).style.display =
+            "none";
+
+    }
+
+
+    function renderHistory(
+        history
+    ) {
+
+        const container =
+            document.getElementById(
+                "historyList"
+            );
+
+
+        container.innerHTML =
+            "";
+
+
+        if (
+            history.length === 0
+        ) {
+
+            container.innerHTML =
+                `
+                <div class="empty-history">
+                    No claims have been checked yet.
+                </div>
+                `;
+
+            return;
+
+        }
+
+
+        history.forEach(
+            function (item) {
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.className =
+                    "history-item";
+
+
+                const top =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                top.className =
+                    "history-top";
+
+
+                const claim =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                claim.className =
+                    "history-claim";
+
+
+                claim.textContent =
+                    item.claim;
+
+
+                const verdict =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                verdict.className =
+                    "history-verdict";
+
+
+                verdict.textContent =
+                    item.verdict;
+
+
+                if (
+                    item.verdict
+                    === "SUPPORTED"
+                ) {
+
+                    verdict.style.color =
+                        "#166534";
+
+                }
+
+                else if (
+                    item.verdict
+                    === "REFUTED"
+                ) {
+
+                    verdict.style.color =
+                        "#991b1b";
+
+                }
+
+                else {
+
+                    verdict.style.color =
+                        "#92400e";
+
+                }
+
+
+                top.appendChild(
+                    claim
+                );
+
+
+                top.appendChild(
+                    verdict
+                );
+
+
+                const meta =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                meta.className =
+                    "history-meta";
+
+
+                const confidence =
+                    (
+                        Number(
+                            item.confidence
+                            || 0
+                        )
+                        * 100
+                    ).toFixed(1);
+
+
+                meta.textContent =
+                    "Model confidence: "
+                    + confidence
+                    + "%"
+                    + " · "
+                    + (
+                        item.claim_domain
+                        || "GENERAL"
+                    )
+                    + " · "
+                    + (
+                        item.created_at
+                        || ""
+                    );
+
+
+                card.appendChild(
+                    top
+                );
+
+
+                card.appendChild(
+                    meta
+                );
+
+
+                container.appendChild(
+                    card
+                );
+
+            }
+        );
+
+    }
+
+
+    async function clearHistory() {
+
+        const confirmed =
+            confirm(
+                "Clear all saved claim history?"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/history",
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Unable to clear history."
+                );
+
+            }
+
+
+            renderHistory(
+                []
+            );
+
+        }
+
+        catch (error) {
+
+            alert(
+                "Unable to clear claim history."
+            );
+
+        }
+
+    }
+
+</script>
+
+</body>
+
+</html>

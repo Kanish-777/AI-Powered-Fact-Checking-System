@@ -10,3 +10,6 @@ models_cache/
 build/
 dist/
 *.egg-info/
+*.db
+*.db-shm
+*.db-wal
