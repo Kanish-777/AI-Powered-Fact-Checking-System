@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.vscode/
+*.log
+.cache/
+huggingface/
+models_cache/
+build/
+dist/
+*.egg-info/
