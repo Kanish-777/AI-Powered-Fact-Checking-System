@@ -1,0 +1,194 @@
+[
+    {
+        "claim": "Mount Everest is the highest mountain above sea level.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9926028837280839,
+        "correct": true,
+        "time_seconds": 15.85
+    },
+    {
+        "claim": "Tokyo is the capital of Japan.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9976922179938466,
+        "correct": true,
+        "time_seconds": 108.03
+    },
+    {
+        "claim": "Gold has the chemical symbol Au.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9895289639875833,
+        "correct": true,
+        "time_seconds": 55.0
+    },
+    {
+        "claim": "Saturn has a prominent ring system.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9164427270976097,
+        "correct": true,
+        "time_seconds": 40.88
+    },
+    {
+        "claim": "The human heart has four chambers.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9988127188293743,
+        "correct": true,
+        "time_seconds": 94.97
+    },
+    {
+        "claim": "Photosynthesis allows plants to convert light energy into chemical energy.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9991744700942133,
+        "correct": true,
+        "time_seconds": 11.93
+    },
+    {
+        "claim": "Insulin helps regulate blood glucose levels.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9984442475776995,
+        "correct": true,
+        "time_seconds": 23.67
+    },
+    {
+        "claim": "The Nile River flows through Egypt.",
+        "expected": "SUPPORTED",
+        "predicted": "SUPPORTED",
+        "confidence": 0.9836926261023052,
+        "correct": true,
+        "time_seconds": 18.19
+    },
+    {
+        "claim": "The Moon is a star.",
+        "expected": "REFUTED",
+        "predicted": "REFUTED",
+        "confidence": 0.9593852498560775,
+        "correct": true,
+        "time_seconds": 151.91
+    },
+    {
+        "claim": "Canberra is the capital of New Zealand.",
+        "expected": "REFUTED",
+        "predicted": "REFUTED",
+        "confidence": 0.9501001762268335,
+        "correct": true,
+        "time_seconds": 21.53
+    },
+    {
+        "claim": "Whales are fish.",
+        "expected": "REFUTED",
+        "predicted": "REFUTED",
+        "confidence": 0.9864855019578324,
+        "correct": true,
+        "time_seconds": 38.4
+    },
+    {
+        "claim": "Antarctica is the hottest continent on Earth.",
+        "expected": "REFUTED",
+        "predicted": "REFUTED",
+        "confidence": 0.9598135662229901,
+        "correct": true,
+        "time_seconds": 27.19
+    },
+    {
+        "claim": "Venus is the farthest planet from the Sun.",
+        "expected": "REFUTED",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": false,
+        "time_seconds": 32.19
+    },
+    {
+        "claim": "Humans normally have three hearts.",
+        "expected": "REFUTED",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": false,
+        "time_seconds": 59.43
+    },
+    {
+        "claim": "DNA uses uracil instead of thymine.",
+        "expected": "REFUTED",
+        "predicted": "REFUTED",
+        "confidence": 0.997009459871834,
+        "correct": true,
+        "time_seconds": 52.68
+    },
+    {
+        "claim": "Water normally boils at 50 degrees Celsius at sea level.",
+        "expected": "REFUTED",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": false,
+        "time_seconds": 27.01
+    },
+    {
+        "claim": "Intelligent extraterrestrial life currently exists on Proxima Centauri b.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": true,
+        "time_seconds": 66.5
+    },
+    {
+        "claim": "A previously unknown civilization currently lives beneath Antarctica.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": true,
+        "time_seconds": 26.61
+    },
+    {
+        "claim": "Humans will permanently live on Mars by 2040.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": true,
+        "time_seconds": 39.59
+    },
+    {
+        "claim": "A cure for every type of cancer will be discovered within five years.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.9965891181298088,
+        "correct": true,
+        "time_seconds": 54.29
+    },
+    {
+        "claim": "There is an undiscovered planet containing intelligent human-like life.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.9641251317479995,
+        "correct": true,
+        "time_seconds": 160.62
+    },
+    {
+        "claim": "Scientists will completely eliminate aging in humans before 2050.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": true,
+        "time_seconds": 26.33
+    },
+    {
+        "claim": "An unknown species larger than a blue whale currently lives in the deepest ocean.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": true,
+        "time_seconds": 37.24
+    },
+    {
+        "claim": "Humans will discover confirmed extraterrestrial intelligence within the next ten years.",
+        "expected": "INSUFFICIENT",
+        "predicted": "INSUFFICIENT",
+        "confidence": 0.0,
+        "correct": true,
+        "time_seconds": 27.79
+    }
+]
