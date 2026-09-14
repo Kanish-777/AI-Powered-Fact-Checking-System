@@ -42,6 +42,94 @@ COMPARISON_ATTRIBUTES = {
 }
 
 
+# ============================================================
+# RETRIEVAL-ONLY TYPO NORMALIZATION
+# ============================================================
+
+def normalize_retrieval_claim(
+    claim: str
+) -> str:
+
+    normalized = " ".join(
+        claim.strip().split()
+    )
+
+    # --------------------------------------------------------
+    # Conservative typo corrections for common function words.
+    #
+    # IMPORTANT:
+    # This only affects search/query generation.
+    # The original claim displayed to the user is unchanged.
+    # --------------------------------------------------------
+
+    corrections = {
+        "ia": "is",
+        "si": "is",
+        "iz": "is",
+
+        "teh": "the",
+        "hte": "the",
+
+        "rae": "are",
+        "aer": "are",
+
+        "wsa": "was"
+    }
+
+    words = normalized.split()
+
+    corrected_words = []
+
+    for word in words:
+
+        match = re.match(
+            r"^([A-Za-z]+)([^A-Za-z]*)$",
+            word
+        )
+
+        if not match:
+
+            corrected_words.append(
+                word
+            )
+
+            continue
+
+        base_word = match.group(1)
+
+        punctuation = match.group(2)
+
+        corrected_word = corrections.get(
+            base_word.lower(),
+            base_word
+        )
+
+        # Preserve capitalization style.
+        if base_word.isupper():
+
+            corrected_word = (
+                corrected_word.upper()
+            )
+
+        elif base_word[0].isupper():
+
+            corrected_word = (
+                corrected_word.capitalize()
+            )
+
+        corrected_words.append(
+            corrected_word + punctuation
+        )
+
+    return " ".join(
+        corrected_words
+    )
+
+
+# ============================================================
+# SINGULARIZATION
+# ============================================================
+
 def singularize_word(
     word: str
 ) -> str:
@@ -63,6 +151,10 @@ def singularize_word(
     return word
 
 
+# ============================================================
+# SUBJECT NORMALIZATION
+# ============================================================
+
 def normalize_subject(
     subject: str
 ) -> str:
@@ -80,13 +172,31 @@ def normalize_subject(
     )
 
 
+# ============================================================
+# SEARCH QUERY GENERATION
+# ============================================================
+
 def generate_search_queries(
     claim: str,
     max_queries: int = 4
 ) -> list[str]:
 
-    cleaned_claim = " ".join(
-        claim.strip().split()
+    # --------------------------------------------------------
+    # Retrieval-only normalization.
+    #
+    # Example:
+    #
+    # User:
+    # THE SUN IA A PLANET
+    #
+    # Internal retrieval:
+    # THE SUN IS A PLANET
+    #
+    # Original claim itself is NOT modified.
+    # --------------------------------------------------------
+
+    cleaned_claim = normalize_retrieval_claim(
+        claim
     )
 
     queries = [
@@ -469,6 +579,10 @@ def generate_search_queries(
         :max_queries
     ]
 
+
+# ============================================================
+# GENERAL KEYWORD QUERY
+# ============================================================
 
 def create_keyword_query(
     claim: str

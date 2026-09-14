@@ -1,10 +1,18 @@
 import re
+from collections import OrderedDict
+
+import torch
 
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import cos_sim
 
 
 MODEL_NAME = "BAAI/bge-base-en-v1.5"
+
+
+# ============================================================
+# MODEL
+# ============================================================
 
 model = SentenceTransformer(
     MODEL_NAME
@@ -17,11 +25,75 @@ QUERY_INSTRUCTION = (
 
 
 # ============================================================
-# LIGHTWEIGHT PRE-FILTER SETTINGS
+# SETTINGS
 # ============================================================
 
 MAX_BGE_CANDIDATES = 30
 
+# Cache embeddings of Wikipedia/scientific passages.
+#
+# The same page/chunk may appear under multiple generated
+# queries. Without caching, BGE encodes that text repeatedly.
+PASSAGE_CACHE_SIZE = 500
+
+# Search queries can also repeat across claims.
+QUERY_CACHE_SIZE = 100
+
+
+# ============================================================
+# SIMPLE LRU EMBEDDING CACHES
+# ============================================================
+
+_passage_embedding_cache = OrderedDict()
+
+_query_embedding_cache = OrderedDict()
+
+
+def _get_cached_embedding(
+    cache: OrderedDict,
+    key: str
+):
+
+    embedding = cache.get(
+        key
+    )
+
+    if embedding is not None:
+
+        cache.move_to_end(
+            key
+        )
+
+    return embedding
+
+
+def _store_cached_embedding(
+    cache: OrderedDict,
+    key: str,
+    embedding: torch.Tensor,
+    max_size: int
+):
+
+    cache[key] = (
+        embedding
+        .detach()
+        .cpu()
+    )
+
+    cache.move_to_end(
+        key
+    )
+
+    while len(cache) > max_size:
+
+        cache.popitem(
+            last=False
+        )
+
+
+# ============================================================
+# STOPWORDS
+# ============================================================
 
 STOPWORDS = {
     "the",
@@ -111,6 +183,7 @@ def calculate_lexical_score(
     )
 
     if not query_tokens:
+
         return 0.0
 
     score = 0.0
@@ -118,9 +191,11 @@ def calculate_lexical_score(
     for token in query_tokens:
 
         if token in text_tokens:
+
             score += 1.0
 
         if token in title_tokens:
+
             score += 2.0
 
     normalized_query = (
@@ -140,6 +215,7 @@ def calculate_lexical_score(
         and normalized_query
         in normalized_text
     ):
+
         score += 5.0
 
     return score
@@ -156,6 +232,7 @@ def prefilter_evidence(
 ) -> list[dict]:
 
     if len(evidence_items) <= max_candidates:
+
         return evidence_items
 
     scored_items = []
@@ -194,6 +271,159 @@ def prefilter_evidence(
 
 
 # ============================================================
+# QUERY EMBEDDING
+# ============================================================
+
+def get_query_embedding(
+    claim: str
+) -> torch.Tensor:
+
+    query_text = (
+        QUERY_INSTRUCTION
+        + claim
+    )
+
+    cached = (
+        _get_cached_embedding(
+            _query_embedding_cache,
+            query_text
+        )
+    )
+
+    if cached is not None:
+
+        return cached
+
+    embedding = (
+        model.encode(
+            query_text,
+            convert_to_tensor=True,
+            normalize_embeddings=True,
+            show_progress_bar=False
+        )
+    )
+
+    embedding = (
+        embedding
+        .detach()
+        .cpu()
+    )
+
+    _store_cached_embedding(
+        _query_embedding_cache,
+        query_text,
+        embedding,
+        QUERY_CACHE_SIZE
+    )
+
+    return embedding
+
+
+# ============================================================
+# PASSAGE EMBEDDINGS
+# ============================================================
+
+def get_passage_embeddings(
+    passages: list[str]
+) -> torch.Tensor:
+
+    if not passages:
+
+        return torch.empty(
+            (0, 0)
+        )
+
+    # --------------------------------------------------------
+    # Find passages that BGE has not already encoded.
+    # --------------------------------------------------------
+
+    missing_passages = []
+
+    seen_missing = set()
+
+    for passage in passages:
+
+        cached = (
+            _get_cached_embedding(
+                _passage_embedding_cache,
+                passage
+            )
+        )
+
+        if (
+            cached is None
+            and passage not in seen_missing
+        ):
+
+            missing_passages.append(
+                passage
+            )
+
+            seen_missing.add(
+                passage
+            )
+
+    # --------------------------------------------------------
+    # Encode ALL new passages together.
+    #
+    # This keeps the efficient BGE batch behaviour.
+    # --------------------------------------------------------
+
+    if missing_passages:
+
+        new_embeddings = (
+            model.encode(
+                missing_passages,
+                convert_to_tensor=True,
+                normalize_embeddings=True,
+                batch_size=32,
+                show_progress_bar=False
+            )
+        )
+
+        new_embeddings = (
+            new_embeddings
+            .detach()
+            .cpu()
+        )
+
+        for passage, embedding in zip(
+            missing_passages,
+            new_embeddings
+        ):
+
+            _store_cached_embedding(
+                _passage_embedding_cache,
+                passage,
+                embedding,
+                PASSAGE_CACHE_SIZE
+            )
+
+    # --------------------------------------------------------
+    # Reconstruct embeddings in original passage order.
+    # --------------------------------------------------------
+
+    ordered_embeddings = []
+
+    for passage in passages:
+
+        embedding = (
+            _get_cached_embedding(
+                _passage_embedding_cache,
+                passage
+            )
+        )
+
+        ordered_embeddings.append(
+            embedding
+        )
+
+    return torch.stack(
+        ordered_embeddings
+    )
+
+
+# ============================================================
 # BGE SEMANTIC RANKER
 # ============================================================
 
@@ -204,10 +434,11 @@ def rank_evidence(
 ) -> list[dict]:
 
     if not evidence_items:
+
         return []
 
     # --------------------------------------------------------
-    # FAST PRE-FILTER
+    # FAST LEXICAL PRE-FILTER
     # --------------------------------------------------------
 
     candidate_items = (
@@ -221,42 +452,40 @@ def rank_evidence(
     )
 
     passages = [
-        item["text"]
+        item.get(
+            "text",
+            ""
+        )
         for item in candidate_items
     ]
-
-    query_text = (
-        QUERY_INSTRUCTION
-        + claim
-    )
 
     # --------------------------------------------------------
     # BGE QUERY EMBEDDING
     # --------------------------------------------------------
 
     claim_embedding = (
-        model.encode(
-            query_text,
-            convert_to_tensor=True,
-            normalize_embeddings=True,
-            batch_size=32,
-            show_progress_bar=False
+        get_query_embedding(
+            claim
         )
     )
 
     # --------------------------------------------------------
     # BGE PASSAGE EMBEDDINGS
+    #
+    # Previously every call encoded every passage again.
+    #
+    # Now already-seen chunks are reused.
     # --------------------------------------------------------
 
     passage_embeddings = (
-        model.encode(
-            passages,
-            convert_to_tensor=True,
-            normalize_embeddings=True,
-            batch_size=32,
-            show_progress_bar=False
+        get_passage_embeddings(
+            passages
         )
     )
+
+    if passage_embeddings.numel() == 0:
+
+        return []
 
     # --------------------------------------------------------
     # COSINE SIMILARITY
@@ -301,3 +530,19 @@ def rank_evidence(
     return ranked_results[
         :top_k
     ]
+
+
+# ============================================================
+# OPTIONAL CACHE INFO
+# ============================================================
+
+def get_embedding_cache_info() -> dict:
+
+    return {
+        "cached_queries": len(
+            _query_embedding_cache
+        ),
+        "cached_passages": len(
+            _passage_embedding_cache
+        )
+    }

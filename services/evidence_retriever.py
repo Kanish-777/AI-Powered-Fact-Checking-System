@@ -16,12 +16,27 @@ HEADERS = {
 
 
 # ============================================================
+# INTERACTIVE RETRIEVAL SETTINGS
+# ============================================================
+
+# We do NOT allow Wikipedia to block a user request for
+# 30-60+ seconds.
+MAX_RATE_LIMIT_WAIT = 3
+
+# Keep retries small because this is an interactive application.
+MAX_RETRIES = 2
+
+# Separate connection/read timeout.
+REQUEST_TIMEOUT = (4, 8)
+
+
+# ============================================================
 # WIKIPEDIA REQUEST
 # ============================================================
 
 def make_wikipedia_request(
     params: dict,
-    max_retries: int = 4
+    max_retries: int = MAX_RETRIES
 ) -> dict:
 
     for attempt in range(max_retries):
@@ -32,8 +47,12 @@ def make_wikipedia_request(
                 WIKIPEDIA_API_URL,
                 params=params,
                 headers=HEADERS,
-                timeout=15
+                timeout=REQUEST_TIMEOUT
             )
+
+            # ------------------------------------------------
+            # RATE LIMIT
+            # ------------------------------------------------
 
             if response.status_code == 429:
 
@@ -41,25 +60,42 @@ def make_wikipedia_request(
                     "Retry-After"
                 )
 
-                if retry_after:
+                try:
+                    wait_time = int(retry_after) if retry_after else 1
 
-                    try:
-                        wait_time = int(retry_after)
+                except (ValueError, TypeError):
+                    wait_time = 1
 
-                    except ValueError:
-                        wait_time = 3 * (2 ** attempt)
+                # --------------------------------------------
+                # IMPORTANT:
+                # Never freeze the web request for ~1 minute.
+                #
+                # If Wikipedia asks us to wait too long,
+                # fail this retrieval gracefully instead.
+                # --------------------------------------------
 
-                else:
-                    wait_time = 3 * (2 ** attempt)
+                if wait_time > MAX_RATE_LIMIT_WAIT:
 
-                print(
-                    "Wikipedia rate limit reached. "
-                    f"Waiting {wait_time} seconds..."
-                )
+                    print(
+                        "Wikipedia rate limited this request. "
+                        f"Retry-After={wait_time}s. "
+                        "Skipping instead of blocking the user."
+                    )
 
-                time.sleep(wait_time)
+                    return {}
 
-                continue
+                if attempt < max_retries - 1:
+
+                    print(
+                        "Wikipedia rate limit reached. "
+                        f"Retrying after {wait_time}s..."
+                    )
+
+                    time.sleep(wait_time)
+
+                    continue
+
+                return {}
 
             response.raise_for_status()
 
@@ -67,21 +103,28 @@ def make_wikipedia_request(
 
         except requests.exceptions.Timeout:
 
+            print(
+                "Wikipedia request timed out."
+            )
+
             if attempt < max_retries - 1:
 
-                wait_time = 2 * (2 ** attempt)
-
-                time.sleep(wait_time)
+                time.sleep(1)
 
                 continue
 
             return {}
 
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as error:
+
+            print(
+                "Wikipedia request failed: "
+                f"{error}"
+            )
 
             if attempt < max_retries - 1:
 
-                time.sleep(2)
+                time.sleep(1)
 
                 continue
 
@@ -189,10 +232,7 @@ def get_wikipedia_pages_text(
         return {}
 
     # --------------------------------------------------------
-    # Deduplicate downloads only.
-    #
-    # A page can still later be evaluated under several
-    # different search queries.
+    # Deduplicate pages.
     # --------------------------------------------------------
 
     unique_page_ids = list(
@@ -204,14 +244,14 @@ def get_wikipedia_pages_text(
     results = {}
 
     # --------------------------------------------------------
-    # Only 3 simultaneous requests.
+    # Keep concurrency conservative.
     #
-    # This reduces waiting time without aggressively hitting
-    # Wikipedia with too many requests.
+    # Two simultaneous requests are enough for responsiveness
+    # while reducing unnecessary pressure on Wikipedia.
     # --------------------------------------------------------
 
     max_workers = min(
-        3,
+        2,
         len(unique_page_ids)
     )
 

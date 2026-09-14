@@ -36,7 +36,8 @@ from services.evidence_diversity import (
 )
 
 from services.query_generator import (
-    generate_search_queries
+    generate_search_queries,
+    normalize_retrieval_claim
 )
 
 from services.explanation_generator import (
@@ -120,9 +121,25 @@ def process_claim(
         "-" * 70
     )
 
+    # Keep the exact user claim for UI/history/explanations.
     cleaned_claim = (
         claim.strip()
     )
+
+    # Use a retrieval/verification-safe normalized version internally.
+    # Example:
+    # "THE SUN IA A PLANET" -> "THE SUN IS A PLANET"
+    internal_claim = (
+        normalize_retrieval_claim(
+            cleaned_claim
+        )
+    )
+
+    if internal_claim != cleaned_claim:
+        print(
+            "[NORMALIZATION] Internal claim: "
+            f"{internal_claim}"
+        )
 
     # ========================================================
     # 1. DOMAIN DETECTION
@@ -134,7 +151,7 @@ def process_claim(
 
     claim_domain = (
         detect_claim_domain(
-            cleaned_claim
+            internal_claim
         )
     )
 
@@ -159,7 +176,7 @@ def process_claim(
 
     search_queries = (
         generate_search_queries(
-            cleaned_claim,
+            internal_claim,
             max_queries=4
         )
     )
@@ -475,7 +492,7 @@ def process_claim(
 
     wikipedia_shortlist = (
         filter_entity_mismatches(
-            cleaned_claim,
+            internal_claim,
             wikipedia_shortlist
         )
     )
@@ -494,12 +511,12 @@ def process_claim(
     )
 
     if should_use_scientific_source(
-        cleaned_claim
+        internal_claim
     ):
 
         scientific_results = (
             search_scientific_evidence(
-                cleaned_claim,
+                internal_claim,
                 max_records=3
             )
         )
@@ -577,7 +594,7 @@ def process_claim(
 
     top_scientific = (
         rank_evidence(
-            cleaned_claim,
+            internal_claim,
             scientific_evidence,
             top_k=6
         )
@@ -603,7 +620,7 @@ def process_claim(
 
     reranked_scientific = (
         rerank_evidence(
-            cleaned_claim,
+            internal_claim,
             top_scientific,
             top_k=len(
                 top_scientific
@@ -649,7 +666,7 @@ def process_claim(
 
     comparison_result = (
         reason_about_comparison(
-            cleaned_claim,
+            internal_claim,
             combined_evidence
         )
     )
@@ -705,7 +722,7 @@ def process_claim(
 
     verification_results = (
         verify_claim_with_evidence_batch(
-            cleaned_claim,
+            internal_claim,
             evidence_texts
         )
     )
